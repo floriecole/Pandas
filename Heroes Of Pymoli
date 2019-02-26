@@ -1,1 +1,320 @@
 
+# coding: utf-8
+
+# In[1]:
+
+# Dependencies and Setup
+import pandas as pd
+import numpy as np
+
+
+# In[2]:
+
+# File to Load (Remember to Change These)
+csv_path = "purchase_data.csv"
+
+# Read Purchasing File and store into Pandas data frame
+purchase_data = pd.read_csv(csv_path)
+
+purchase_data.head()
+
+
+# In[3]:
+
+# Display the total number of players
+player_total = len(purchase_data['SN'].unique())
+player_total
+
+
+# In[4]:
+
+# Run basic calculations to obtain number of unique items,  etc
+unique_items = len(purchase_data['Item ID'].unique())
+unique_items
+
+
+# In[5]:
+
+# average price
+avg_price = purchase_data['Price'].mean()
+avg_price
+
+
+# In[6]:
+
+# no of purchases
+purchase_count = purchase_data['Purchase ID'].count()
+purchase_count
+
+
+# In[7]:
+
+# total revenue
+revenue = purchase_data['Price'].sum()
+revenue
+
+
+# In[57]:
+
+# Create a summary data frame to hold the results
+purchase_df = pd.DataFrame({
+    "Number of Unique Items": [183],
+    "Average Price": [3.05],
+    "Number of Purchases": [780],
+    "Total Revenue": [2379.77]
+})
+purchase_df.style.format({'Average Price': '${:.2f}', 'Total Revenue': '${:,.2f}'})
+
+
+# In[9]:
+
+# total active count of Players by gender --three columns will return unique values
+unique_count = purchase_data.loc[:, ["SN","Gender", "Age"]]
+unique_count
+
+clean_df = unique_count.drop_duplicates()
+clean_df.describe()
+
+gender_count = clean_df["Gender"].value_counts()
+gender_count
+
+
+# In[10]:
+
+# Percentage of  Players
+gender_percent = (gender_count/576)*100
+gender_percent
+
+
+# In[11]:
+
+# Run basic calculations to obtain purchase count by gender 
+purchase_count = purchase_data["Gender"].value_counts()
+purchase_count
+
+
+# In[12]:
+
+# avg purchase price by gender
+price_avg = (purchase_data.groupby(['Gender'], as_index=False).mean()
+            .groupby('Gender')['Price'].mean())
+price_avg
+
+
+# In[13]:
+
+# total purchase value by gender
+price_sum = (purchase_data.groupby(['Gender'], as_index=False).sum()
+            .groupby('Gender')['Price'].sum())
+price_sum
+
+
+# In[14]:
+
+# avg total purchase per person by gender
+purchase_avg = price_sum / clean_df["Gender"].value_counts()
+purchase_avg
+
+
+# In[65]:
+
+# Create a summary data frame to hold the results
+results = {"Purchase Count": [113,652,15],"Avg Purchase Price": [3.20,3.02,3.35],"Total Purchase Value": [361.94,1967.64,50.19],"Avg Total Purchase per Person": [4.47,4.07,4.56]}
+
+#analysis_df.set_index(['Gender'], inplace = True)
+analysis_df = pd.DataFrame(results, index=['Female','Male','Other / Non-Disclosed'])
+analysis_df.style.format({'Avg Purchase Price': '${:.2f}', 'Total Purchase Value': '${:,.2f}', 'Avg Total Purchase per Person': '${:,.2f}'})
+
+
+# In[16]:
+
+# Establish bins for ages --numbers have to match with group labels and group labels have to be continuous
+bins = [0,9,14,19,24,29,34,39,46]
+
+group_labels = ["0-9", "9-14", "14-19", "19-24", "24-29", "29-34", "34-39", "39-46"]    
+
+
+# In[17]:
+
+# Categorize the existing players using the age bins. Hint: use pd.cut()
+pd.cut(clean_df["Age"], bins, labels=group_labels).head(10)
+
+
+# In[18]:
+
+clean_df["Age Group"] = pd.cut(clean_df["Age"], bins, labels=group_labels)
+clean_df.head()
+
+
+# In[19]:
+
+# Calculate the numbers and percentages by age group
+# Create a GroupBy object based upon "Age"
+purchase_group = clean_df.groupby("Age Group")
+
+# Find how many rows fall into each bin
+print(purchase_group["Age"].count())
+print((purchase_group["Age"].count())/576*100)
+
+
+# In[20]:
+
+# Create a summary data frame to hold the results
+age_results = {"Total Count": [17,22,107,258,77,52,31,12], "Percentage of Players": [2.95, 3.82, 18.58, 44.79, 13.37, 9.03, 5.38, 2.08]}
+demographics_df = pd.DataFrame(age_results, index=['0-9', '9-14', '14-19', '19-24', '24-29', '29-34', '34-39', '39-46'])
+demographics_df
+
+
+# In[21]:
+
+#Run basic calculations to obtain purchase count, avg. purchase price, total purchase value 
+row_count = purchase_data.loc[:, ["Purchase ID","Price"]]
+row_count
+
+row_count["Age Group"] = pd.cut(purchase_data["Age"], bins, labels=group_labels)
+row_count.head()
+
+age_count = row_count.groupby("Age Group")
+
+#purchase count
+print(age_count["Purchase ID"].count())
+#avg. purchase price
+print(age_count["Price"].mean())
+#total purchase value
+print(age_count["Price"].sum())
+ 
+#avg. total purchase per person
+row_count = purchase_data.loc[:, ["SN","Gender","Age"]]
+row_count
+
+df_clean = row_count.drop_duplicates()
+df_clean.describe()
+
+row_count["Age Group"] = pd.cut(df_clean["Age"], bins, labels=group_labels)
+row_count.head()
+
+tpv = age_count["Price"].sum()
+
+age_count = row_count.groupby("Age Group")
+purch_avg = tpv / age_count["Age"].count()
+purch_avg   
+
+
+# In[59]:
+
+# Create a summary data frame to hold the results
+
+purchase_results = {"Purchase Count": [23,28,136,365,101,73,41,13],"Avg Purchase Price": [3.35,2.96,3.04,3.05,2.90,2.93,3.60,2.94],"Total Purchase Value": [77.13,82.78,412.89,1114.06,293.00,214.00,147.67,38.24],"Avg Total Purchase per Person": [4.54,3.76,3.86,4.32,3.81,4.12,4.76,3.19]}
+purchase_df = pd.DataFrame(purchase_results, index=['0-9', '9-14', '14-19', '19-24', '24-29', '29-34', '34-39', '39-46'])
+purchase_df.style.format({'Avg Purchase Price': '${:.2f}', 'Total Purchase Value': '${:,.2f}', 'Avg Total Purchase per Person': '${:,.2f}'})
+
+
+# In[51]:
+
+#Run basic calculations to obtain Purchase Count, Average Purchase Price, Total Purchase Value by Top Spenders
+top_count = purchase_data.loc[:, ["SN","Purchase ID","Price"]]
+top_count
+
+purch_count = purchase_data["SN"].value_counts()
+purch_count
+
+
+# In[71]:
+
+#Retrieve the Item ID, Item Name, and Item Price columns
+
+#Group by Item ID and Item Name. Perform calculations to obtain purchase count, item price, and total purchase value
+
+#Create a summary data frame to hold the results
+
+#Sort the purchase count column in descending order
+
+purch_amt = pd.DataFrame(purchase_data.groupby('SN')['Price'].sum())
+num_purch = pd.DataFrame(purchase_data.groupby('SN')['Price'].count())
+avg_purch = pd.DataFrame(purchase_data.groupby('SN')['Price'].mean())
+# merge the above dfs
+merge_table = pd.merge(purch_amt, num_purch, left_index = True, right_index = True).merge(avg_purch, left_index=True, right_index=True)
+# rename columns
+merge_table.rename(columns = {'Price_x': 'Total Purchase Value', 'Price_y':'Purchase Count', 'Price':'Average Purchase Price'}, inplace = True)
+# sort from highest purchase value to lowest
+merge_table.sort_values('Total Purchase Value', ascending = False, inplace=True)
+# take top 5 only
+merge_table = merge_table.head()
+# format
+merge_table.style.format({'Total Purchase Value': '${:.2f}', 'Average Purchase Price': '${:.2f}'})
+
+
+# In[24]:
+
+# avg purchase price by top spender
+top_avg = (purchase_data.groupby(['SN'], as_index=False).mean()
+            .groupby('SN')['Price'].mean())
+top_avg
+
+
+# In[25]:
+
+# total purchase value by top spender
+top_sum = purch_count * top_avg
+top_sum
+
+
+# In[75]:
+
+#Retrieve the Item ID, Item Name, and Item Price columns
+
+#Group by Item ID and Item Name. Perform calculations to obtain purchase count, item price, and total purchase value
+
+#Create a summary data frame to hold the results
+
+#Sort the purchase count column in descending order
+
+# gets a count of each item by grouping by Item ID and counting the number of each IDs occurances
+pop_items_ID = pd.DataFrame(purchase_data.groupby('Item ID')['Item ID'].count())
+#sort from high to low total purchase count
+pop_items_ID.sort_values('Item ID', ascending = False, inplace = True)
+#keep the first 6 rows because there is a tie
+pop_items_ID = pop_items_ID.iloc[0:6][:]
+#find the total purchase value of each item
+pop_items_total = pd.DataFrame(purchase_data.groupby('Item ID')['Price'].sum())
+#merge purcahse count and total purcahse value 
+pop_items = pd.merge(pop_items_ID, pop_items_total, left_index = True, right_index = True)
+#drop duplicate items from original Df
+no_dup_items = purchase_data.drop_duplicates(['Item ID'], keep = 'last')
+# merge to get all other info from the top 6 using the no dup df
+pop_merge_ID = pd.merge(pop_items, no_dup_items, left_index = True, right_on = 'Item ID')
+#keep only neede columns
+pop_merge_ID = pop_merge_ID[['Item ID', 'Item Name', 'Item ID_x', 'Price_y', 'Price_x']]
+#reset index as item ID for aesthetics
+pop_merge_ID.set_index(['Item ID'], inplace = True)
+# rename columns
+pop_merge_ID.rename(columns =  {'Item ID_x': 'Purchase Count', 'Price_y': 'Item Price', 'Price_x': 'Total Purchase Value'}, inplace=True)
+pop_merge_ID.sort_values('Purchase Count', ascending = False, inplace=True)
+#format
+pop_merge_ID.style.format({'Item Price': '${:.2f}', 'Total Purchase Value': '${:.2f}'})
+
+
+# In[77]:
+
+# Sort the above table by total purchase value in descending order
+
+# find total purchase value and sort by high to low
+profit_items = pd.DataFrame(purchase_data.groupby('Item ID')['Price'].sum())
+profit_items.sort_values('Price', ascending = False, inplace = True)
+profit_items = profit_items.iloc[0:5][:]
+#get item purchase count
+pur_count = pd.DataFrame(purchase_data.groupby('Item ID')['Item ID'].count())
+
+profit_items = pd.merge(profit_items, pur_count, left_index = True, right_index = True, how = 'left')
+merge_profit = pd.merge(profit_items, no_dup_items, left_index = True, right_on = 'Item ID', how = 'left')
+merge_profit = merge_profit[['Item ID', 'Item Name', 'Item ID_x', 'Price_y','Price_x']]
+merge_profit.set_index(['Item ID'], inplace=True)
+merge_profit.rename(columns = {'Item ID_x': 'Purchase Count', 'Price_y': 'Item Price', 'Price_x': 'Total Purchase Value'}, inplace = True)
+merge_profit.style.format({'Item Price': '${:.2f}', 'Total Purchase Value': '${:.2f}'})
+
+
+# In[ ]:
+
+
+
+
